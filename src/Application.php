@@ -1,19 +1,39 @@
 <?php
 
-class Application
+class Application implements ArrayAccess
 {
-    private $dependencies = array();
+    private $container = array();
 
-    public function register($name, Closure $resolve)
+    public function offsetSet($offset, $value)
     {
-        $this->dependencies[$name] = $resolve;
+        if (is_null($offset)) {
+            $this->container[] = $value;
+        } else {
+            $this->container[$offset] = $value;
+        }
     }
 
-    public function resolve($name)
+    public function offsetExists($offset)
     {
-        if (isset($this->dependencies[$name])) {
-            return $this->dependencies[$name]();
+        return isset($this->container[$offset]);
+    }
+
+    public function offsetUnset($offset)
+    {
+        unset($this->container[$offset]);
+    }
+
+    public function offsetGet($offset)
+    {
+        $item = isset($this->container[$offset]) ? $this->container[$offset] : null;
+        if ($item instanceof Closure) {
+            $item = $item();
         }
-        throw new Exception('Nothing registered with that name, fool.');
+        return $item;
+    }
+
+    public function path()
+    {
+
     }
 }
